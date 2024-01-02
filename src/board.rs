@@ -4,23 +4,26 @@ use rand::seq::SliceRandom;
 
 pub struct Board {
     board: [u8; 16],
-    score: u32
+    score: u32,
+    seed: u64,
 }
 
 
 impl Board {
 
-    pub fn new() -> Board {
+    pub fn new(seed: u64) -> Board {
         Board {
             board: [0; 16],
-            score: 0
+            score: 0,
+            seed: seed,
         }
     }
 
     pub fn copy(&self) -> Board {
         Board {
             board: self.board,
-            score: self.score
+            score: self.score,
+            seed: self.seed,
         }
     }
 
@@ -65,16 +68,21 @@ impl Board {
 
     pub fn add_random_tile(&mut self) {
         let mut empty_tiles = Vec::new();
-        for i in 0..16 {
-            if self.board[i] == 0 {
-                empty_tiles.push(i);
+        for col in 0..4 {
+            for row in 0..4 {
+                let idx = row * 4 + col;
+                if self.board[idx] == 0 {
+                    empty_tiles.push(idx);
+                }
             }
         }
+        
+        let idx = self.seed.wrapping_rem(empty_tiles.len() as u64);
+        let spawn_index = empty_tiles[idx as usize];
+        let value = if self.seed & 0x10 == 0 { 2 } else { 4 };
+        self.board[spawn_index] = value;
 
-        let value = if rand::random::<f32>() < 0.9 { 2 } else { 4 };
-
-        let idx = empty_tiles.choose(&mut rand::thread_rng()).unwrap();
-        self.board[*idx] = value;
+        self.seed = self.seed.wrapping_mul(self.seed).wrapping_rem(50515093);
     }
 
     fn move_up(&mut self) -> bool {
@@ -219,6 +227,7 @@ impl Board {
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Score: {}", self.score)?;
+        writeln!(f, "Seed: {}", self.seed)?;
         for y in 0..4 {
             for x in 0..4 {
                 write!(f, "{:2} ", self.get(x, y))?;
@@ -233,6 +242,7 @@ impl fmt::Display for Board {
 impl fmt::Debug for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Score: {}", self.score)?;
+        writeln!(f, "Seed: {}", self.seed)?;
         for y in 0..4 {
             for x in 0..4 {
                 write!(f, "{:2} ", self.get(x, y))?;
@@ -260,7 +270,7 @@ mod tests {
                                         0, 0, 8, 0,
                                         0, 0, 0, 0];
         
-        let mut game = Board::new();
+        let mut game = Board::new(0);
         game.board = board_start;
 
         let moved = game.move_up();
@@ -278,7 +288,7 @@ mod tests {
                                         0, 0, 8, 0,
                                         0, 0, 0, 0];
         
-        let mut game = Board::new();
+        let mut game = Board::new(0);
         game.board = board_end;
 
         let moved = game.move_up();
@@ -300,7 +310,7 @@ mod tests {
                                         4, 8, 2, 0,
                                         4, 2, 0, 0];
         
-        let mut game = Board::new();
+        let mut game = Board::new(0);
         game.board = board_start;
 
         let moved = game.move_left();
@@ -318,7 +328,7 @@ mod tests {
                                         4, 8, 2, 0,
                                         4, 2, 0, 0];
         
-        let mut game = Board::new();
+        let mut game = Board::new(0);
         game.board = board_end;
 
         let moved = game.move_left();
@@ -340,7 +350,7 @@ mod tests {
                                         0, 2, 8, 4,
                                         4, 8, 8, 4];
         
-        let mut game = Board::new();
+        let mut game = Board::new(0);
         game.board = board_start;
 
         let moved = game.move_down();
@@ -358,7 +368,7 @@ mod tests {
                                         0, 2, 0, 0,
                                         4, 8, 8, 4];
         
-        let mut game = Board::new();
+        let mut game = Board::new(0);
         game.board = board_end;
 
         let moved = game.move_down();
@@ -380,7 +390,7 @@ mod tests {
                                         0, 2, 4, 8,
                                         0, 0, 4, 4];
         
-        let mut game = Board::new();
+        let mut game = Board::new(0);
         game.board = board_start;
 
         let moved = game.move_right();
@@ -398,7 +408,7 @@ mod tests {
                                         2, 4, 2, 4,
                                         0, 0, 4, 8];
         
-        let mut game = Board::new();
+        let mut game = Board::new(0);
         game.board = board_end;
 
         let moved = game.move_right();
