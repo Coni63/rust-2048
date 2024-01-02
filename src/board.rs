@@ -1,11 +1,10 @@
 use std::fmt;
 
-use rand::seq::SliceRandom;
 
 pub struct Board {
-    board: [u8; 16],
-    score: u32,
-    seed: u64,
+    pub board: [u8; 16],
+    pub score: u32,
+    pub seed: u64,
 }
 
 
@@ -25,18 +24,6 @@ impl Board {
             score: self.score,
             seed: self.seed,
         }
-    }
-
-    // pub fn set_by_index(&mut self, idx: usize, value: u8) {
-    //     self.board[idx] = value;
-    // }
-
-    // pub fn set(&mut self, x: u8, y: u8, value: u8) {
-    //     self.board[(y * 4 + x) as usize] = value;
-    // }
-
-    pub fn get(&self, x: u8, y: u8) -> u8 {
-        self.board[(y * 4 + x) as usize]
     }
 
     pub fn apply_action(&mut self, action: String) -> bool {
@@ -230,7 +217,7 @@ impl fmt::Display for Board {
         writeln!(f, "Seed: {}", self.seed)?;
         for y in 0..4 {
             for x in 0..4 {
-                write!(f, "{:2} ", self.get(x, y))?;
+                write!(f, "{:2} ", self.board[(y * 4 + x) as usize])?;
             }
             writeln!(f)?;
         }
@@ -245,7 +232,7 @@ impl fmt::Debug for Board {
         writeln!(f, "Seed: {}", self.seed)?;
         for y in 0..4 {
             for x in 0..4 {
-                write!(f, "{:2} ", self.get(x, y))?;
+                write!(f, "{:2} ", self.board[(y * 4 + x) as usize])?;
             }
             writeln!(f)?;
         }

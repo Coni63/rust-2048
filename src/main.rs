@@ -1,10 +1,16 @@
-mod board;
+pub mod board;
 mod action;
 
 
 fn main() {
-    let mut game = board::Board::new();
+
+    let mut game = board::Board::new(290797);
+
     game.add_random_tile();
+    println!("{:#}", game);
+
+    game.add_random_tile();
+    println!("{:#}", game);
 
     loop {
         let action = action::get_action();
@@ -19,16 +25,6 @@ fn main() {
 
         game.add_random_tile();
 
-        println!("{}", game); // Display
         println!("{:#}", game); // Debug --> same for now as Display
     }
-    // game.set(0, 0, 2);
-
-    // let mut game2 = game.copy();
-
-    // game.set2(12, 4);
-
-    // game.print();
-
-    // game2.print();
 }
