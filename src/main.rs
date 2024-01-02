@@ -19,7 +19,8 @@ fn main() {
 
         game.add_random_tile();
 
-        game.print();
+        println!("{}", game); // Display
+        println!("{:#}", game); // Debug --> same for now as Display
     }
     // game.set(0, 0, 2);
 
