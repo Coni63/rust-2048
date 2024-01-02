@@ -1,23 +1,16 @@
-pub fn get_action() -> String {
+pub fn get_action() -> u8 {
     println!("Enter a command:");
     loop {
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).expect("Failed to read line");
-        
-        input = input.trim().to_lowercase().to_string();
-    
-        if input == "a" {
-            std::process::exit(0);
-        } else if input == "z" {
-            return "up".to_string();
-        } else if input == "q" {
-            return "left".to_string();
-        } else if input == "s" {
-            return "down".to_string();
-        } else if input == "d" {
-            return "right".to_string();
-        } else {
-            println!("Invalid input, retry:");
+
+        match input.trim().to_lowercase().as_str() {
+            "a" => std::process::exit(0),
+            "z" => return 1,
+            "q" => return 2,
+            "s" => return 3,
+            "d" => return 4,
+            _ => println!("Invalid input, retry:"),
         }
     }
 }

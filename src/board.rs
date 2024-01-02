@@ -26,26 +26,22 @@ impl Board {
         }
     }
 
-    pub fn apply_action(&mut self, action: String) -> bool {
-        if action == "up" {
-            return self.move_up();
-        } else if action == "left" {
-            return self.move_left();
-        } else if action == "down" {
-            return self.move_down();
-        } else if action == "right" {
-            return self.move_right();
+    pub fn apply_action(&mut self, action: u8) -> bool {
+        match action {
+            1 => return self.move_up(),
+            2 => return self.move_left(),
+            3 => return self.move_down(),
+            4 => return self.move_right(),
+            _ => return false,
         }
-        return false;
     }
 
     pub fn is_game_over(&self) -> bool {
-        // not valid if moved are possible, instead check all move directions
         let mut moved: bool;
         let mut copy: Board;
-        for dir in ["up", "left", "down", "right"].iter() {
+        for dir in 1..5 {
             copy = self.copy();
-            moved = copy.apply_action(dir.to_string());
+            moved = copy.apply_action(dir);
             if moved {
                 return false;
             }
@@ -90,6 +86,7 @@ impl Board {
                     } else if self.board[ptr1] == self.board[ptr2] {  // 2 same values -> merge
                         self.board[ptr1] *= 2;
                         self.board[ptr2] = 0;
+                        self.score += self.board[ptr1 as usize] as u32;
                         ptr1 += 4;
                         ptr2 = ptr1 + 4;
                         moved = true;
@@ -125,6 +122,7 @@ impl Board {
                     } else if self.board[ptr1] == self.board[ptr2] {  // 2 same values -> merge
                         self.board[ptr1] *= 2;
                         self.board[ptr2] = 0;
+                        self.score += self.board[ptr1 as usize] as u32;
                         ptr1 += 1;
                         ptr2 = ptr1 + 1;
                         moved = true;
@@ -159,6 +157,7 @@ impl Board {
                     } else if self.board[ptr1 as usize] == self.board[ptr2 as usize] {  // 2 same values -> merge
                         self.board[ptr1 as usize] *= 2;
                         self.board[ptr2 as usize] = 0;
+                        self.score += self.board[ptr1 as usize] as u32;
                         ptr1 -= 4;
                         ptr2 = ptr1 - 4;
                         moved = true;
@@ -193,6 +192,7 @@ impl Board {
                     } else if self.board[ptr1 as usize] == self.board[ptr2 as usize] {  // 2 same values -> merge
                         self.board[ptr1 as usize] *= 2;
                         self.board[ptr2 as usize] = 0;
+                        self.score += self.board[ptr1 as usize] as u32;
                         ptr1 -= 1;
                         ptr2 = ptr1 - 1;
                         moved = true;

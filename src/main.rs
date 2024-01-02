@@ -14,7 +14,6 @@ fn main() {
 
     loop {
         let action = action::get_action();
-        println!("{}", action);
 
         game.apply_action(action);
         
