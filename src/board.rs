@@ -60,6 +60,10 @@ impl Board {
             }
         }
         
+        if empty_tiles.len() == 0 {
+            return;
+        }
+
         let idx = self.seed.wrapping_rem(empty_tiles.len() as u64);
         let spawn_index = empty_tiles[idx as usize];
         let value = if self.seed & 0x10 == 0 { 2 } else { 4 };

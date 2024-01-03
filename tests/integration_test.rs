@@ -12,4 +12,26 @@ fn test_board() {
                            0, 0, 0, 2,
                            0, 0, 0, 0,
                            0, 4, 0, 0]);
+
+    for letter in "DRDURRLRDUURUDRRDDRDLULRDULUDRULLUDDLRDLDLL".chars() {
+        let action = match letter {
+            'U' => 1,
+            'L' => 2,
+            'D' => 3,
+            'R' => 4,
+            _ => 0,
+        };
+
+        let moved = game.apply_action(action);
+        assert!(moved);
+        
+        game.add_random_tile();
+    }
+
+    assert!(game.board == [8, 2, 8, 4,
+                           2, 16, 32, 8,
+                           16, 2, 8, 16,
+                           4, 16, 4, 2]);
+    assert!(game.score == 280);
+    assert!(game.is_game_over());
 }
