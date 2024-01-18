@@ -1,4 +1,6 @@
+use std::cmp::{Eq, PartialEq};
 use std::fmt;
+use std::hash::{Hash, Hasher};
 
 pub struct Board {
     pub board: [u8; 16],
@@ -264,9 +266,47 @@ impl fmt::Debug for Board {
     }
 }
 
+impl PartialEq for Board {
+    fn eq(&self, other: &Self) -> bool {
+        self.board == other.board
+    }
+}
+
+// Automatically implementing Eq since we implemented PartialEq
+impl Eq for Board {}
+
+impl Hash for Board {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.board.hash(state)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_copy() {
+        let mut game = Board::new(0);
+        game.board = [0, 0, 4, 4, 0, 2, 2, 4, 0, 0, 2, 2, 0, 0, 0, 0];
+        game.score = 123;
+        game.seed = 456;
+
+        let mut copy = game.copy();
+        copy.play(4);
+
+        assert!(game.board == [0, 0, 4, 4, 0, 2, 2, 4, 0, 0, 2, 2, 0, 0, 0, 0]);
+        assert!(copy.board == [2, 0, 0, 8, 0, 0, 4, 4, 0, 0, 0, 4, 0, 0, 0, 0]);
+
+        assert!(game.score == 123);
+        assert!(copy.score == 123 + 16);
+
+        assert!(game.seed == 456);
+        assert!(copy.seed == 456 * 456);
+    }
 
     #[test]
     fn test_move_up() {
@@ -390,5 +430,37 @@ mod tests {
 
         assert!(game.board == board_end);
         assert!(!moved);
+    }
+
+    #[test]
+    fn test_hash_same_board() {
+        let game1 = Board::new(0);
+        let game2 = Board::new(0);
+
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        game1.hash(&mut hasher);
+        let h1 = hasher.finish();
+
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        game2.hash(&mut hasher);
+        let h2 = hasher.finish();
+
+        assert!(h1 == h2);
+    }
+
+    #[test]
+    fn test_hash_different_board() {
+        let game1 = Board::new(0);
+        let game2 = Board::new(42);
+
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        game1.hash(&mut hasher);
+        let h1 = hasher.finish();
+
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        game2.hash(&mut hasher);
+        let h2 = hasher.finish();
+
+        assert!(h1 != h2);
     }
 }
