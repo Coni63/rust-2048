@@ -1,21 +1,23 @@
 use std::fmt;
 
-
 pub struct Board {
     pub board: [u8; 16],
     pub score: u32,
     pub seed: u64,
 }
 
-
 impl Board {
-
     pub fn new(seed: u64) -> Board {
-        Board {
+        let mut board = Board {
             board: [0; 16],
             score: 0,
-            seed: seed,
-        }
+            seed,
+        };
+
+        board.add_random_tile();
+        board.add_random_tile();
+
+        board
     }
 
     pub fn copy(&self) -> Board {
@@ -26,14 +28,12 @@ impl Board {
         }
     }
 
-    pub fn apply_action(&mut self, action: u8) -> bool {
-        match action {
-            1 => return self.move_up(),
-            2 => return self.move_left(),
-            3 => return self.move_down(),
-            4 => return self.move_right(),
-            _ => return false,
-        }
+    pub fn play(&mut self, action: u8) -> bool {
+        let moved = self.apply_action(action);
+
+        self.add_random_tile();
+
+        moved
     }
 
     pub fn is_game_over(&self) -> bool {
@@ -46,10 +46,20 @@ impl Board {
                 return false;
             }
         }
-        return true;
+        true
     }
 
-    pub fn add_random_tile(&mut self) {
+    fn apply_action(&mut self, action: u8) -> bool {
+        match action {
+            1 => self.move_up(),
+            2 => self.move_left(),
+            3 => self.move_down(),
+            4 => self.move_right(),
+            _ => false,
+        }
+    }
+
+    fn add_random_tile(&mut self) {
         let mut empty_tiles = Vec::new();
         for col in 0..4 {
             for row in 0..4 {
@@ -59,8 +69,8 @@ impl Board {
                 }
             }
         }
-        
-        if empty_tiles.len() == 0 {
+
+        if empty_tiles.is_empty() {
             return;
         }
 
@@ -76,30 +86,33 @@ impl Board {
         let mut moved = false;
         let mut ptr1: usize;
         let mut ptr2: usize;
-        for i in 0..4 {  // for each column
+        for i in 0..4 {
+            // for each column
             ptr1 = i;
             ptr2 = i + 4;
 
             while ptr2 < 16 {
                 if self.board[ptr2] != 0 {
-                    if self.board[ptr1] == 0 {  // move to empty tile
+                    if self.board[ptr1] == 0 {
+                        // move to empty tile
                         self.board[ptr1] = self.board[ptr2];
                         self.board[ptr2] = 0;
                         ptr2 += 4;
                         moved = true;
-                    } else if self.board[ptr1] == self.board[ptr2] {  // 2 same values -> merge
+                    } else if self.board[ptr1] == self.board[ptr2] {
+                        // 2 same values -> merge
                         self.board[ptr1] *= 2;
                         self.board[ptr2] = 0;
-                        self.score += self.board[ptr1 as usize] as u32;
+                        self.score += self.board[ptr1] as u32;
                         ptr1 += 4;
                         ptr2 = ptr1 + 4;
                         moved = true;
-                    } else {    // 2 different values
+                    } else {
+                        // 2 different values
                         ptr1 += 4;
                         ptr2 = ptr1 + 4;
                     }
-                }
-                else {
+                } else {
                     ptr2 += 4;
                 }
             }
@@ -112,30 +125,33 @@ impl Board {
         let mut ptr1: usize;
         let mut ptr2: usize;
 
-        for i in 0..4 {  // for each row
+        for i in 0..4 {
+            // for each row
             ptr1 = 4 * i;
             ptr2 = 4 * i + 1;
 
             while ptr2 < 4 * (i + 1) {
                 if self.board[ptr2] != 0 {
-                    if self.board[ptr1] == 0 {  // move to empty tile
+                    if self.board[ptr1] == 0 {
+                        // move to empty tile
                         self.board[ptr1] = self.board[ptr2];
                         self.board[ptr2] = 0;
                         ptr2 += 1;
                         moved = true;
-                    } else if self.board[ptr1] == self.board[ptr2] {  // 2 same values -> merge
+                    } else if self.board[ptr1] == self.board[ptr2] {
+                        // 2 same values -> merge
                         self.board[ptr1] *= 2;
                         self.board[ptr2] = 0;
-                        self.score += self.board[ptr1 as usize] as u32;
+                        self.score += self.board[ptr1] as u32;
                         ptr1 += 1;
                         ptr2 = ptr1 + 1;
                         moved = true;
-                    } else {    // 2 different values
+                    } else {
+                        // 2 different values
                         ptr1 += 1;
                         ptr2 = ptr1 + 1;
                     }
-                }
-                else {
+                } else {
                     ptr2 += 1;
                 }
             }
@@ -147,30 +163,33 @@ impl Board {
         let mut moved = false;
         let mut ptr1: i32;
         let mut ptr2: i32;
-        for i in 0..4 {  // for each column
+        for i in 0..4 {
+            // for each column
             ptr1 = 12 + i; // bottom pointer
             ptr2 = 8 + i; // top pointer
 
             while ptr2 >= 0 {
                 if self.board[ptr2 as usize] != 0 {
-                    if self.board[ptr1 as usize] == 0 {  // move to empty tile
+                    if self.board[ptr1 as usize] == 0 {
+                        // move to empty tile
                         self.board[ptr1 as usize] = self.board[ptr2 as usize];
                         self.board[ptr2 as usize] = 0;
                         ptr2 -= 4;
                         moved = true;
-                    } else if self.board[ptr1 as usize] == self.board[ptr2 as usize] {  // 2 same values -> merge
+                    } else if self.board[ptr1 as usize] == self.board[ptr2 as usize] {
+                        // 2 same values -> merge
                         self.board[ptr1 as usize] *= 2;
                         self.board[ptr2 as usize] = 0;
                         self.score += self.board[ptr1 as usize] as u32;
                         ptr1 -= 4;
                         ptr2 = ptr1 - 4;
                         moved = true;
-                    } else {    // 2 different values
+                    } else {
+                        // 2 different values
                         ptr1 -= 4;
                         ptr2 = ptr1 - 4;
                     }
-                }
-                else {
+                } else {
                     ptr2 -= 4;
                 }
             }
@@ -182,37 +201,39 @@ impl Board {
         let mut moved = false;
         let mut ptr1: i32;
         let mut ptr2: i32;
-        for i in 0..4 {  // for each row
+        for i in 0..4 {
+            // for each row
             ptr1 = 4 * (i + 1) - 1; // right pointer
             ptr2 = 4 * (i + 1) - 2; // left pointer
 
             while ptr2 >= 4 * i {
                 if self.board[ptr2 as usize] != 0 {
-                    if self.board[ptr1 as usize] == 0 {  // move to empty tile
+                    if self.board[ptr1 as usize] == 0 {
+                        // move to empty tile
                         self.board[ptr1 as usize] = self.board[ptr2 as usize];
                         self.board[ptr2 as usize] = 0;
                         ptr2 -= 1;
                         moved = true;
-                    } else if self.board[ptr1 as usize] == self.board[ptr2 as usize] {  // 2 same values -> merge
+                    } else if self.board[ptr1 as usize] == self.board[ptr2 as usize] {
+                        // 2 same values -> merge
                         self.board[ptr1 as usize] *= 2;
                         self.board[ptr2 as usize] = 0;
                         self.score += self.board[ptr1 as usize] as u32;
                         ptr1 -= 1;
                         ptr2 = ptr1 - 1;
                         moved = true;
-                    } else {    // 2 different values
+                    } else {
+                        // 2 different values
                         ptr1 -= 1;
                         ptr2 = ptr1 - 1;
                     }
-                }
-                else {
+                } else {
                     ptr2 -= 1;
                 }
             }
         }
         moved
     }
-
 }
 
 impl fmt::Display for Board {
@@ -229,7 +250,6 @@ impl fmt::Display for Board {
     }
 }
 
-
 impl fmt::Debug for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Score: {}", self.score)?;
@@ -244,23 +264,15 @@ impl fmt::Debug for Board {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
     #[test]
     fn test_move_up() {
-        let board_start =   [0, 4, 0, 2,
-                                        0, 0, 4, 2,
-                                        2, 4, 2, 2,
-                                        2, 2, 8, 2];
-        let board_end =     [4, 8, 4, 4,
-                                        0, 2, 2, 4,
-                                        0, 0, 8, 0,
-                                        0, 0, 0, 0];
-        
+        let board_start = [0, 4, 0, 2, 0, 0, 4, 2, 2, 4, 2, 2, 2, 2, 8, 2];
+        let board_end = [4, 8, 4, 4, 0, 2, 2, 4, 0, 0, 8, 0, 0, 0, 0, 0];
+
         let mut game = Board::new(0);
         game.board = board_start;
 
@@ -274,11 +286,8 @@ mod tests {
 
     #[test]
     fn test_no_move_up() {
-        let board_end =     [4, 8, 4, 4,
-                                        0, 2, 2, 0,
-                                        0, 0, 8, 0,
-                                        0, 0, 0, 0];
-        
+        let board_end = [4, 8, 4, 4, 0, 2, 2, 0, 0, 0, 8, 0, 0, 0, 0, 0];
+
         let mut game = Board::new(0);
         game.board = board_end;
 
@@ -292,15 +301,9 @@ mod tests {
 
     #[test]
     fn test_move_left() {
-        let board_start =   [2, 2, 2, 2,
-                                        2, 0, 4, 2,
-                                        0, 4, 8, 2,
-                                        0, 4, 0, 2];
-        let board_end =     [4, 4, 0, 0,
-                                        2, 4, 2, 0,
-                                        4, 8, 2, 0,
-                                        4, 2, 0, 0];
-        
+        let board_start = [2, 2, 2, 2, 2, 0, 4, 2, 0, 4, 8, 2, 0, 4, 0, 2];
+        let board_end = [4, 4, 0, 0, 2, 4, 2, 0, 4, 8, 2, 0, 4, 2, 0, 0];
+
         let mut game = Board::new(0);
         game.board = board_start;
 
@@ -314,11 +317,8 @@ mod tests {
 
     #[test]
     fn test_no_move_left() {
-        let board_end =     [4, 0, 0, 0,
-                                        2, 4, 2, 0,
-                                        4, 8, 2, 0,
-                                        4, 2, 0, 0];
-        
+        let board_end = [4, 0, 0, 0, 2, 4, 2, 0, 4, 8, 2, 0, 4, 2, 0, 0];
+
         let mut game = Board::new(0);
         game.board = board_end;
 
@@ -329,18 +329,12 @@ mod tests {
         assert!(game.board == board_end);
         assert!(!moved);
     }
-    
+
     #[test]
     fn test_move_down() {
-        let board_start =   [2, 2, 4, 2,
-                                        2, 0, 4, 2,
-                                        0, 4, 8, 2,
-                                        0, 4, 0, 2];
-        let board_end =     [0, 0, 0, 0,
-                                        0, 0, 0, 0,
-                                        0, 2, 8, 4,
-                                        4, 8, 8, 4];
-        
+        let board_start = [2, 2, 4, 2, 2, 0, 4, 2, 0, 4, 8, 2, 0, 4, 0, 2];
+        let board_end = [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 8, 4, 4, 8, 8, 4];
+
         let mut game = Board::new(0);
         game.board = board_start;
 
@@ -354,11 +348,8 @@ mod tests {
 
     #[test]
     fn test_no_move_down() {
-        let board_end =     [0, 0, 0, 0,
-                                        0, 0, 0, 0,
-                                        0, 2, 0, 0,
-                                        4, 8, 8, 4];
-        
+        let board_end = [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 4, 8, 8, 4];
+
         let mut game = Board::new(0);
         game.board = board_end;
 
@@ -372,15 +363,9 @@ mod tests {
 
     #[test]
     fn test_move_right() {
-        let board_start =   [2, 2, 2, 2,
-                                        2, 0, 4, 2,
-                                        2, 4, 8, 0,
-                                        2, 2, 4, 0];
-        let board_end =     [0, 0, 4, 4,
-                                        0, 2, 4, 2,
-                                        0, 2, 4, 8,
-                                        0, 0, 4, 4];
-        
+        let board_start = [2, 2, 2, 2, 2, 0, 4, 2, 2, 4, 8, 0, 2, 2, 4, 0];
+        let board_end = [0, 0, 4, 4, 0, 2, 4, 2, 0, 2, 4, 8, 0, 0, 4, 4];
+
         let mut game = Board::new(0);
         game.board = board_start;
 
@@ -394,11 +379,8 @@ mod tests {
 
     #[test]
     fn test_no_move_right() {
-        let board_end =     [0, 0, 0, 4,
-                                        0, 0, 8, 2,
-                                        2, 4, 2, 4,
-                                        0, 0, 4, 8];
-        
+        let board_end = [0, 0, 0, 4, 0, 0, 8, 2, 2, 4, 2, 4, 0, 0, 4, 8];
+
         let mut game = Board::new(0);
         game.board = board_end;
 
