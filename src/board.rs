@@ -3,7 +3,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 
 pub struct Board {
-    pub board: [u8; 16],
+    pub board: [u32; 16],
     pub score: u32,
     pub seed: u64,
 }
@@ -287,6 +287,7 @@ impl Hash for Board {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::Rng;
 
     #[test]
     fn test_copy() {
@@ -462,5 +463,30 @@ mod tests {
         let h2 = hasher.finish();
 
         assert!(h1 != h2);
+    }
+
+    #[test]
+    fn test_benchmark_hash() {
+        let n = 100000;
+        let mut samples: Vec<[u32; 16]> = Vec::new();
+
+        let mut rng = rand::thread_rng();
+        for _ in 0..n {
+            let mut sample: [u32; 16] = [0; 16];
+            sample
+                .iter_mut()
+                .for_each(|elem| *elem = 2 << rng.gen_range(0..17));
+            samples.push(sample);
+        }
+
+        let start_time = std::time::Instant::now();
+        for sample in samples.iter() {
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            sample.hash(&mut hasher);
+            let _ = hasher.finish();
+        }
+        let time_spend = start_time.elapsed().as_nanos();
+
+        println!("Hash time avg: {} ns", time_spend / n as u128);
     }
 }
