@@ -3,7 +3,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 
 pub struct Board {
-    pub board: [u32; 16],
+    pub board: [u8; 16],
     pub score: u32,
     pub seed: u64,
 }
@@ -78,7 +78,7 @@ impl Board {
 
         let idx = self.seed.wrapping_rem(empty_tiles.len() as u64);
         let spawn_index = empty_tiles[idx as usize];
-        let value = if self.seed & 0x10 == 0 { 2 } else { 4 };
+        let value = if self.seed & 0x10 == 0 { 1 } else { 2 };
         self.board[spawn_index] = value;
 
         self.seed = self.seed.wrapping_mul(self.seed).wrapping_rem(50515093);
@@ -103,9 +103,9 @@ impl Board {
                         moved = true;
                     } else if self.board[ptr1] == self.board[ptr2] {
                         // 2 same values -> merge
-                        self.board[ptr1] *= 2;
+                        self.board[ptr1] += 1;
                         self.board[ptr2] = 0;
-                        self.score += self.board[ptr1] as u32;
+                        self.score += 1 << self.board[ptr1] as u32;
                         ptr1 += 4;
                         ptr2 = ptr1 + 4;
                         moved = true;
@@ -142,9 +142,9 @@ impl Board {
                         moved = true;
                     } else if self.board[ptr1] == self.board[ptr2] {
                         // 2 same values -> merge
-                        self.board[ptr1] *= 2;
+                        self.board[ptr1] += 1;
                         self.board[ptr2] = 0;
-                        self.score += self.board[ptr1] as u32;
+                        self.score += 1 << self.board[ptr1] as u32;
                         ptr1 += 1;
                         ptr2 = ptr1 + 1;
                         moved = true;
@@ -180,9 +180,9 @@ impl Board {
                         moved = true;
                     } else if self.board[ptr1 as usize] == self.board[ptr2 as usize] {
                         // 2 same values -> merge
-                        self.board[ptr1 as usize] *= 2;
+                        self.board[ptr1 as usize] += 1;
                         self.board[ptr2 as usize] = 0;
-                        self.score += self.board[ptr1 as usize] as u32;
+                        self.score += 1 << self.board[ptr1 as usize] as u32;
                         ptr1 -= 4;
                         ptr2 = ptr1 - 4;
                         moved = true;
@@ -218,9 +218,9 @@ impl Board {
                         moved = true;
                     } else if self.board[ptr1 as usize] == self.board[ptr2 as usize] {
                         // 2 same values -> merge
-                        self.board[ptr1 as usize] *= 2;
+                        self.board[ptr1 as usize] += 1;
                         self.board[ptr2 as usize] = 0;
-                        self.score += self.board[ptr1 as usize] as u32;
+                        self.score += 1 << self.board[ptr1 as usize] as u32;
                         ptr1 -= 1;
                         ptr2 = ptr1 - 1;
                         moved = true;
@@ -244,7 +244,8 @@ impl fmt::Display for Board {
         writeln!(f, "Seed: {}", self.seed)?;
         for y in 0..4 {
             for x in 0..4 {
-                write!(f, "{:2} ", self.board[(y * 4 + x) as usize])?;
+                let val = self.board[(y * 4 + x) as usize];
+                write!(f, "{:2} ", if val > 0 { 1 << val } else { 0 })?;
             }
             writeln!(f)?;
         }
@@ -258,7 +259,8 @@ impl fmt::Debug for Board {
         writeln!(f, "Seed: {}", self.seed)?;
         for y in 0..4 {
             for x in 0..4 {
-                write!(f, "{:2} ", self.board[(y * 4 + x) as usize])?;
+                let val = self.board[(y * 4 + x) as usize];
+                write!(f, "{:2} ", if val > 0 { 1 << val } else { 0 })?;
             }
             writeln!(f)?;
         }
@@ -287,7 +289,6 @@ impl Hash for Board {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::Rng;
 
     #[test]
     fn test_copy() {
@@ -300,10 +301,10 @@ mod tests {
         copy.play(4);
 
         assert!(game.board == [0, 0, 4, 4, 0, 2, 2, 4, 0, 0, 2, 2, 0, 0, 0, 0]);
-        assert!(copy.board == [2, 0, 0, 8, 0, 0, 4, 4, 0, 0, 0, 4, 0, 0, 0, 0]);
+        assert!(copy.board == [1, 0, 0, 5, 0, 0, 3, 4, 0, 0, 0, 3, 0, 0, 0, 0]);
 
         assert!(game.score == 123);
-        assert!(copy.score == 123 + 16);
+        assert!(copy.score == 123 + 48);
 
         assert!(game.seed == 456);
         assert!(copy.seed == 456 * 456);
@@ -312,7 +313,7 @@ mod tests {
     #[test]
     fn test_move_up() {
         let board_start = [0, 4, 0, 2, 0, 0, 4, 2, 2, 4, 2, 2, 2, 2, 8, 2];
-        let board_end = [4, 8, 4, 4, 0, 2, 2, 4, 0, 0, 8, 0, 0, 0, 0, 0];
+        let board_end = [3, 5, 4, 3, 0, 2, 2, 3, 0, 0, 8, 0, 0, 0, 0, 0];
 
         let mut game = Board::new(0);
         game.board = board_start;
@@ -343,7 +344,7 @@ mod tests {
     #[test]
     fn test_move_left() {
         let board_start = [2, 2, 2, 2, 2, 0, 4, 2, 0, 4, 8, 2, 0, 4, 0, 2];
-        let board_end = [4, 4, 0, 0, 2, 4, 2, 0, 4, 8, 2, 0, 4, 2, 0, 0];
+        let board_end = [3, 3, 0, 0, 2, 4, 2, 0, 4, 8, 2, 0, 4, 2, 0, 0];
 
         let mut game = Board::new(0);
         game.board = board_start;
@@ -373,8 +374,8 @@ mod tests {
 
     #[test]
     fn test_move_down() {
-        let board_start = [2, 2, 4, 2, 2, 0, 4, 2, 0, 4, 8, 2, 0, 4, 0, 2];
-        let board_end = [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 8, 4, 4, 8, 8, 4];
+        let board_start = [2, 2, 4, 2, 2, 0, 4, 2, 0, 4, 5, 2, 0, 4, 0, 2];
+        let board_end = [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 3, 3, 5, 5, 3];
 
         let mut game = Board::new(0);
         game.board = board_start;
@@ -404,8 +405,8 @@ mod tests {
 
     #[test]
     fn test_move_right() {
-        let board_start = [2, 2, 2, 2, 2, 0, 4, 2, 2, 4, 8, 0, 2, 2, 4, 0];
-        let board_end = [0, 0, 4, 4, 0, 2, 4, 2, 0, 2, 4, 8, 0, 0, 4, 4];
+        let board_start = [2, 2, 2, 2, 2, 0, 4, 2, 2, 4, 8, 0, 2, 2, 3, 0];
+        let board_end = [0, 0, 3, 3, 0, 2, 4, 2, 0, 2, 4, 8, 0, 0, 3, 3];
 
         let mut game = Board::new(0);
         game.board = board_start;
@@ -463,30 +464,5 @@ mod tests {
         let h2 = hasher.finish();
 
         assert!(h1 != h2);
-    }
-
-    #[test]
-    fn test_benchmark_hash() {
-        let n = 100000;
-        let mut samples: Vec<[u32; 16]> = Vec::new();
-
-        let mut rng = rand::thread_rng();
-        for _ in 0..n {
-            let mut sample: [u32; 16] = [0; 16];
-            sample
-                .iter_mut()
-                .for_each(|elem| *elem = 2 << rng.gen_range(0..17));
-            samples.push(sample);
-        }
-
-        let start_time = std::time::Instant::now();
-        for sample in samples.iter() {
-            let mut hasher = std::collections::hash_map::DefaultHasher::new();
-            sample.hash(&mut hasher);
-            let _ = hasher.finish();
-        }
-        let time_spend = start_time.elapsed().as_nanos();
-
-        println!("Hash time avg: {} ns", time_spend / n as u128);
     }
 }
