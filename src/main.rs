@@ -15,7 +15,8 @@ fn main() {
     let ans = agent::beam_search(&game);
     let elapsed = start.elapsed();
 
-    println!("Actions: {}", ans);
+    println!("Actions: {}", ans.action);
+    println!("{:#?}", ans.board);
     println!("Time: {:?}", elapsed.as_millis());
 
     // let mut rng = StdRng::seed_from_u64(222);
