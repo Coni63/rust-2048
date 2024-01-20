@@ -1,3 +1,4 @@
+pub mod agent;
 pub mod board;
 
 use rand::distributions::{Distribution, Uniform};
@@ -10,32 +11,39 @@ fn main() {
 
     println!("{:#}", game);
 
-    let mut rng = StdRng::seed_from_u64(222);
-    let die = Uniform::from(1..5);
+    let start = std::time::Instant::now();
+    let ans = agent::beam_search(&game);
+    let elapsed = start.elapsed();
 
-    let mut s = String::new();
+    println!("Actions: {}", ans);
+    println!("Time: {:?}", elapsed.as_millis());
 
-    loop {
-        let action = die.sample(&mut rng);
-        let moved = game.play(action);
+    // let mut rng = StdRng::seed_from_u64(222);
+    // let die = Uniform::from(1..5);
 
-        if !moved {
-            continue;
-        }
+    // let mut s = String::new();
 
-        s += match action {
-            1 => "U",
-            2 => "L",
-            3 => "D",
-            4 => "R",
-            _ => "",
-        };
+    // loop {
+    //     let action = die.sample(&mut rng);
+    //     let moved = game.play(action);
 
-        if game.is_game_over() {
-            println!("Game over!");
-            break;
-        }
-    }
-    println!("{:#}", game); // Debug --> same for now as Display
-    println!("Actions: {}", s);
+    //     if !moved {
+    //         continue;
+    //     }
+
+    //     s += match action {
+    //         1 => "U",
+    //         2 => "L",
+    //         3 => "D",
+    //         4 => "R",
+    //         _ => "",
+    //     };
+
+    //     if game.is_game_over() {
+    //         println!("Game over!");
+    //         break;
+    //     }
+    // }
+    // println!("{:#}", game); // Debug --> same for now as Display
+    // println!("Actions: {}", s);
 }

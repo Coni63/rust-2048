@@ -22,14 +22,6 @@ impl Board {
         board
     }
 
-    pub fn copy(&self) -> Board {
-        Board {
-            board: self.board,
-            score: self.score,
-            seed: self.seed,
-        }
-    }
-
     pub fn play(&mut self, action: u8) -> bool {
         let moved = self.apply_action(action);
 
@@ -42,7 +34,7 @@ impl Board {
         let mut moved: bool;
         let mut copy: Board;
         for dir in 1..5 {
-            copy = self.copy();
+            copy = self.clone();
             moved = copy.apply_action(dir);
             if moved {
                 return false;
@@ -286,18 +278,28 @@ impl Hash for Board {
     }
 }
 
+impl Clone for Board {
+    fn clone(&self) -> Self {
+        Board {
+            board: self.board,
+            score: self.score,
+            seed: self.seed,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_copy() {
+    fn test_clone() {
         let mut game = Board::new(0);
         game.board = [0, 0, 4, 4, 0, 2, 2, 4, 0, 0, 2, 2, 0, 0, 0, 0];
         game.score = 123;
         game.seed = 456;
 
-        let mut copy = game.copy();
+        let mut copy = game.clone();
         copy.play(4);
 
         assert!(game.board == [0, 0, 4, 4, 0, 2, 2, 4, 0, 0, 2, 2, 0, 0, 0, 0]);
