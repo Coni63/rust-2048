@@ -1,9 +1,9 @@
-pub mod agent;
-pub mod board;
+use game_2048::agent;
+use game_2048::board::Board;
 
 #[allow(dead_code)]
 fn main() {
-    let game = board::Board::new(290797);
+    let game = Board::new(290797);
 
     println!("{:#}", game);
 

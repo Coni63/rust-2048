@@ -1,8 +1,8 @@
-pub use game2048lib::board;
+use game_2048::board::Board;
 
 #[test]
 fn test_board() {
-    let mut game = board::Board::new(290797);
+    let mut game = Board::new(290797);
 
     assert!(game.seed == 13339144);
     assert!(game.board == [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0]);

@@ -30,6 +30,7 @@ impl Board {
         moved
     }
 
+    #[allow(dead_code)]
     pub fn is_game_over(&self) -> bool {
         let mut moved: bool;
         let mut copy: Board;

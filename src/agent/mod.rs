@@ -31,7 +31,7 @@ pub fn get_fitness(grid: &[u8; 16]) -> u64 {
     let powers: [u8; 16] = [0, 0, 0, 0, 4, 2, 0, 0, 6, 8, 10, 12, 20, 18, 16, 14];
 
     grid.iter().zip(&powers).fold(0, |acc, (&x, &y)| {
-        acc + if x > 0 { 1 << (x + y) } else { 0 }
+        acc + if (x > 0) && (y > 0) { 1 << (x + y) } else { 0 }
     })
 }
 
