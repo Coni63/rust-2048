@@ -1,3 +1,6 @@
+use rustc_hash::{FxHashSet, FxHasher};
+use std::hash::{Hash, Hasher};
+
 use crate::board::Board;
 
 pub struct Node {
@@ -25,6 +28,20 @@ impl Clone for Node {
         }
     }
 }
+
+impl Hash for Node {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.board.hash(state);
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.board == other.board
+    }
+}
+
+impl Eq for Node {}
 
 pub fn get_fitness(grid: &[u8; 16]) -> u64 {
     // let powers: [u8; 16] = [1, 2, 4, 6, 14, 12, 10, 8, 16, 18, 20, 22, 30, 28, 26, 24];
@@ -57,6 +74,7 @@ pub fn get_child(node: &Node, action: u8) -> Option<Node> {
 pub fn beam_search(board: &Board) -> Node {
     let mut queue_a: Vec<Node> = Vec::new();
     let mut queue_b: Vec<Node> = Vec::new();
+    let mut hashset: FxHashSet<u64> = FxHashSet::default();
 
     let root = Node::new(board);
     queue_a.push(root.clone());
@@ -68,14 +86,26 @@ pub fn beam_search(board: &Board) -> Node {
             let mut has_moved = false;
             for i in 2..5 {
                 if let Some(new_node) = get_child(&node, i) {
-                    queue_b.push(new_node);
-                    has_moved = true;
+                    let mut hasher = FxHasher::default();
+                    new_node.hash(&mut hasher);
+                    let h1 = hasher.finish();
+                    if !hashset.contains(&h1) {
+                        hashset.insert(h1);
+                        queue_b.push(new_node);
+                        has_moved = true;
+                    }
                 }
             }
             if !has_moved {
                 match get_child(&node, 1) {
                     Some(new_node) => {
-                        queue_b.push(new_node);
+                        let mut hasher = FxHasher::default();
+                        new_node.hash(&mut hasher);
+                        let h1 = hasher.finish();
+                        if !hashset.contains(&h1) {
+                            hashset.insert(h1);
+                            queue_b.push(new_node);
+                        }
                     }
                     None => {
                         if node.board.score > best_node.board.score {
@@ -90,6 +120,7 @@ pub fn beam_search(board: &Board) -> Node {
         queue_b.truncate(200);
         queue_a = queue_b;
         queue_b = Vec::new();
+        hashset.clear();
     }
 
     best_node
